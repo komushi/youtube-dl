@@ -18,18 +18,22 @@ class Logger(object):
 
 def upload(d):
 
-	# session = boto3.Session(profile_name='default')	
-	# client = boto3.client('s3')
-	# bucket = 'your-bucket-name'
-
-
+	client = get_s3_client()
 	filename = d['filename']
 	filepath = "./{0}".format(filename)
-	# print(filepath)
+
+	if bucket_key in os.environ:
+		bucket = os.environ[bucket_key]
+	else:
+		bucket = client.list_buckets()['Buckets'][0]['Name']
+
+	print(bucket)
 
 	client.upload_file(filepath, bucket, filename)
 	client.put_object_acl(ACL='public-read', Bucket=bucket, Key=filename)
-	region = "ap-northeast-1"
+
+	region = client.get_bucket_location(Bucket=bucket)['LocationConstraint']
+
 	return "https://s3-{0}.amazonaws.com/{1}/{2}".format(region, bucket, filename)
 
 def processing_hook(d):
@@ -38,19 +42,20 @@ def processing_hook(d):
 		print('Done downloading, now converting & uploading ...')
 		print(upload(d))
 		
-
-# def run(url, key, secret):
 def run(url):
+
+	if height_key in os.environ:
+		preferred_format = 'best[height<={0}]'.format(os.environ[height_key])
+	else:
+		preferred_format = 'best'
+
+	print('preferred_format', preferred_format)
+
 	ydl_opts = {
 		'outtmpl': '%(title)s-%(id)s.%(ext)s',
-		'format': 'best[height=360]',
-		'postprocessors': [{
-			'key': 'FFmpegVideoConvertor',
-			'preferedformat': 'mp4',
-		}],
+		'format': preferred_format,
 		'logger': Logger(),
 		'progress_hooks': [processing_hook],
-		# 'ffmpeg_location': 'ffmpeg/',
 	}
 
 	# ydl_opts2 = {
@@ -68,35 +73,26 @@ def run(url):
 	info = ydl.extract_info(url, True)
 
 
-
-
-def get_s3_client(sysArgv):
+def get_s3_client():
 	try:
 		session = boto3.Session()
-		if session.get_credentials() is not None:
-			client = session.client('s3')
-		elif (len(sysArgv) == 4 and sysArgv[2] is not None and sysArgv[3] is not None):
-			session = boto3.Session(aws_access_key_id=sysArgv[2],
-                  					aws_secret_access_key=sysArgv[3])
-			client = session.client('s3')
-
+		
+		if session.get_credentials() is None:
+			session = boto3.Session(aws_access_key_id=os.environ[aws_access_key],
+                  					aws_secret_access_key=os.environ[aws_secret_key])
+			
 		return session.client('s3')
-		# session = boto3.Session(profile_name='default')	
-	# except ProfileNotFound as e:
-	# 	session = Session(aws_access_key_id=sysArgv[2],
-	# 	                  aws_secret_access_key=sysArgv[3])
 	except:
 	    print("Unexpected error:", sys.exc_info()[0])
 	    raise
 
-    
 
+print(os.environ)
 
-# client = boto3.client('s3')
-# bucket = 's3exp'
-# run(sys.argv[1], sys.argv[2], sys.argv[3])
+bucket_key = 'YOUTUBE_DESTINATION_BUCKET'
+height_key = 'YOUTUBE_MAX_HEIGHT'
+aws_access_key = 'AWS_ACCESS_KEY_ID'
+aws_secret_key = 'AWS_SECRET_ACCESS_KEY'
 
 print(sys.argv)
-client = get_s3_client(sys.argv)
-bucket = 's3exp'
 run(sys.argv[1])

@@ -1,18 +1,6 @@
-1. Build docker image
+# youtube-dl examples
+youtube-dl python scripts with the youtube_dl library
 
-```
-$ docker build -t "komushi/youtube-dl:alpine3.6" .
-```
-
-2. Push to docker hub
-```
-$ docker push komushi/youtube-dl
-```
-
-3. Run
-
-```
-docker run --rm komushi/youtube-dl:alpine3.6 https://www.youtube.com/watch?v=PAujbeIvbfY
-
-docker run --rm komushi/youtube-dl:alpine3.6 <youtube-url> <aws-key> <aws-secret>
-```
+* [Use Case: all-in-one](/all-in-one/README.MD)
+* [Use Case: dl-convert-ul](/dl-convert-ul/PCFDEV_SCDF.MD)
+* 

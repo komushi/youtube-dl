@@ -11,6 +11,7 @@ RUN pip install youtube-dl
 RUN pip install boto3
 
 ADD youtube-dl.py /
+ADD s3-ul.py /
 
 
 ENTRYPOINT [ "python", "./youtube-dl.py" ]
