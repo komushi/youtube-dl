@@ -21,3 +21,4 @@ vendored/
 
 # Serverless directories
 .serverless
+node_modules

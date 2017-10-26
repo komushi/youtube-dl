@@ -58,17 +58,6 @@ def run(url):
 		'progress_hooks': [processing_hook],
 	}
 
-	# ydl_opts2 = {
-	# 	'logger': Logger(),
-	# 	'progress_hooks': [processing_hook],
-	# }
-
-
-	# ydl = YoutubeDL(ydl_opts2)
-	# info = ydl.extract_info(url, download=False)
-	# print(info['entries'][0]['title'])
-	# print(info['entries'][1]['title'])
-
 	ydl = YoutubeDL(ydl_opts)
 	info = ydl.extract_info(url, True)
 
