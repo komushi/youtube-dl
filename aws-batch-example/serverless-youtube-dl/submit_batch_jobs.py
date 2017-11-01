@@ -53,6 +53,31 @@ def submit(job_id):
 
         print("batch job id: " + json.dumps(response, indent=2))
 
+        dynamo_client.update_item(
+            TableName='youtube_jobs',
+            Key={
+                'job_id': {
+                    'S': job_id
+                },
+                'video_id': {
+                    'S': video_id
+                }
+            },
+            UpdateExpression='SET #BAT = :bat, #STS = :sts',
+            ExpressionAttributeNames={
+                '#BAT': 'batch_job_id',
+                '#STS': 'job_status'
+            },
+            ExpressionAttributeValues={
+                ':bat': {
+                    'S': response['jobId']
+                },
+                ':sts': {
+                    'S': 'SUBMITTED'
+                }
+            }
+        )
+
 
 
 def get_dynamo_client():
