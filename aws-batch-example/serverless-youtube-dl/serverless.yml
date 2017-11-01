@@ -1,5 +1,15 @@
 service: serverless-youtube-dl
 
+package:
+  exclude:
+    - node_modules/**
+    - vendored/**
+    - __pycache__/**
+    - .gitignore
+    - requirements.txt
+  include:
+    - vendored/youtube_dl*/**
+
 plugins:
   - serverless-step-functions
   - serverless-pseudo-parameters

@@ -29,5 +29,3 @@ $ serverless deploy
 ```
 $ curl -X POST https://<restapi_id>.execute-api.<region>.amazonaws.com/dev/youtube-dl -d '{"url":"https://www.youtube.com/playlist?list=PLxeJ9A111coroEJyNYTrR7BR2_pY16_Kv"}'
 ```
-
-curl -X POST https://f9spbw9t85.execute-api.ap-northeast-1.amazonaws.com/dev/youtube-dl -d '{"url":"https://www.youtube.com/playlist?list=PLxeJ9A111coroEJyNYTrR7BR2_pY16_Kv"}'

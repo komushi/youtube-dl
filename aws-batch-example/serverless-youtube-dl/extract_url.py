@@ -58,7 +58,7 @@ def extract(url):
                 'video_url': {'S': video_url},
                 'playlist_id': {'S': playlist_id},
                 'playlist_title': {'S': playlist_title},
-                'job_status': {'S': 'pending'}
+                'job_status': {'S': 'NEW'}
             }
         )
 
