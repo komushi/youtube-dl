@@ -12,7 +12,7 @@ def extract(event, context):
     # Get the object from the event and show its content type
     url = event['url']
     try:
-        return extract_url.extract(url)
+        return {'job_id': extract_url.extract(url)}
     except Exception as e:
         print(e)
         raise e

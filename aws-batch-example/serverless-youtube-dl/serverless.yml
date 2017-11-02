@@ -84,8 +84,12 @@ stepFunctions:
           ExtractUrl:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-extract-url"
+            Next: SubmitBatchJobs
+          SubmitBatchJobs:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-submit-batch-jobs"
+            InputPath: $
             End: true
-
 resources:
   Resources:
     JobsDynamoDbTable:

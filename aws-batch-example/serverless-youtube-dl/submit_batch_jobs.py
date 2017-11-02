@@ -18,6 +18,8 @@ class Logger(object):
 
 def submit(job_id):
 
+    print("job_id: " + job_id)
+
     dynamo_client = get_dynamo_client()
     batch_client = get_batch_client()
 
