@@ -16,7 +16,7 @@ class Logger(object):
     def error(self, msg):
         print(msg)
 
-def submit(job_id):
+def check(job_id):
 
     print("job_id: " + job_id)
 
@@ -25,41 +25,34 @@ def submit(job_id):
 
     res = dynamo_client.query(
         TableName=os.environ[dynamo_table],
-        ProjectionExpression='video_id, video_url, video_title',
+        ProjectionExpression='batch_job_id, video_id',
         KeyConditionExpression='job_id = :job_id',
+        FilterExpression='NOT (#BSTS IN (:succeeded, :failed))',
         ExpressionAttributeValues={
-            ':job_id': {'S': job_id}
+            ':job_id': {'S': job_id},
+            ':succeeded': {'S': 'SUCCEEDED'},
+            ':failed': {'S': 'FAILED'}
+        },
+        ExpressionAttributeNames={
+            '#BSTS': 'batch_job_status'
         },
     )
+
+    incomplete_jobs = 0
 
     for i in res[u'Items']:
         print("Received Items: " + json.dumps(i, indent=2))
 
-        video_title = i['video_title']['S']
-        video_url = i['video_url']['S']
+        batch_job_id = i['batch_job_id']['S']
         video_id = i['video_id']['S']
-        job_name = "{0}-{1}".format(job_id, video_id)
 
-        print("jobName: " + job_name)
-        print("video_url: " + video_url)
-        print("video_title: " + video_title)
+        response = batch_client.describe_jobs(jobs=[batch_job_id])
 
-        response = batch_client.submit_job(
-            jobName=job_name,
-            jobQueue=os.environ[job_queue],
-            jobDefinition=os.environ[job_definition],
-            parameters={
-                'url': video_url
-            }
-        )
+        batch_job_status = response['jobs'][0]['status']
 
-        print("batch job id: " + json.dumps(response, indent=2))
-        batch_job_id = response['jobId']
-
-        batch_job_status = batch_client.describe_jobs(jobs=[batch_job_id])['jobs'][0]['status']
-
-        print("batch job status: " + batch_job_status)
-
+        if batch_job_status != "SUCCEEDED" or batch_job_status != "FAILED":
+            print("batch_job_status: " + batch_job_status)
+            incomplete_jobs += 1
 
         dynamo_client.update_item(
             TableName='youtube_jobs',
@@ -71,22 +64,18 @@ def submit(job_id):
                     'S': video_id
                 }
             },
-            UpdateExpression='SET #BAT = :bat, #BSTS = :bsts',
+            UpdateExpression='SET #BSTS = :bsts',
             ExpressionAttributeNames={
-                '#BAT': 'batch_job_id',
                 '#BSTS': 'batch_job_status'
             },
             ExpressionAttributeValues={
-                ':bat': {
-                    'S': response['jobId']
-                },
                 ':bsts': {
                     'S': batch_job_status
                 }
             }
         )
 
-    return job_id
+    return incomplete_jobs
 
 def get_dynamo_client():
     try:

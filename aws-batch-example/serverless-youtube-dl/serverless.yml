@@ -17,8 +17,8 @@ plugins:
 provider:
   name: aws
   runtime: python3.6
-  memorySize: 256
-  timeout: 60
+  memorySize: 512
+  timeout: 300
   stage: dev
   region: ap-northeast-1
   iamRoleStatements:
@@ -60,19 +60,22 @@ provider:
 
   environment:
     DYNAMODB_TABLE: youtube_jobs
+    WAIT_X_SECONDS: 10
 
 functions:
   extract-url:
     handler: handler.extract
   submit-batch-jobs:
     environment:
-      JOB_DEFINITION: youtube-dl-dl-convert-ul:2
+      JOB_DEFINITION: youtube-dl-dl-convert-ul:3
       JOB_QUEUE: first-run-job-queue
     handler: handler.submit
+  check-job-status:
+    handler: handler.check
 
 stepFunctions:
   stateMachines:
-    extractUrlFunction:
+    YoutubeDownload:
       events:
         - http:
             path: youtube-dl
@@ -88,8 +91,30 @@ stepFunctions:
           SubmitBatchJobs:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-submit-batch-jobs"
-            InputPath: $
-            End: true
+            Next: WaitXSeconds
+            OutputPath: $
+          WaitXSeconds:
+            Type: Wait
+            Seconds: ${self:provider.environment.WAIT_X_SECONDS}
+            OutputPath: $
+            Next: CheckJobStatus
+          CheckJobStatus:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-job-status"
+            OutputPath: $
+            Next: AllJobsComplete
+          AllJobsComplete:
+            Type: Choice
+            Choices:
+              - Variable: $.incomplete_jobs
+                NumericEquals: 0
+                Next: Success
+              - Variable: $.incomplete_jobs
+                NumericGreaterThan: 0
+                Next: WaitXSeconds
+                OutputPath: $
+          Success:
+            Type: Succeed
 resources:
   Resources:
     JobsDynamoDbTable:
