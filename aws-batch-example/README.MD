@@ -1,11 +1,7 @@
-```
-$ python extract.py https://www.youtube.com/playlist?list=PLxeJ9A111coroEJyNYTrR7BR2_pY16_Kv
-```
-
 ----
 ## Get in the serverless directory
 ```
-$ cd serverless-youtube-dl
+$ cd aws-batch-example/serverless-youtube-dl
 ```
 
 ## Install serverless framework
