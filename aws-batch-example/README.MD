@@ -1,3 +1,7 @@
+## Batch Process Flow by AWS Step Functions
+![Step Functions Definition](images/flow.png)
+
+
 ----
 ## Get in the serverless directory
 ```
@@ -15,6 +19,14 @@ $ npm install serverless-pseudo-parameters
 ```
 $ pip install -t vendored/ -r requirements.txt
 ```
+
+## Prepare the s3 bucket
+* [Create an s3 bucket to store converted videos on aws console](https://s3.console.aws.amazon.com/s3/home)
+* Modify serverless.yml at provider.environment.YOUTUBE_DESTINATION_BUCKET with the created s3 bucket name
+
+## Prepare the batch compute environment
+* [Create a batch compute environment](https:/console.aws.amazon.com/batch/home#/compute-environments)
+* Modify serverless.yml at provider.environment.COMPUTE_ENVIRONMENT with the created batch compute environment name
 
 ## Deploy
 ```
