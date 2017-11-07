@@ -61,14 +61,19 @@ provider:
   environment:
     DYNAMODB_TABLE: youtube_jobs
     WAIT_X_SECONDS: 10
+    YOUTUBE_MAX_HEIGHT: 500
+    YOUTUBE_DESTINATION_BUCKET: youtube-dl
+    COMPUTE_ENVIRONMENT: compute-env-youtube-dl
+    JOB_DEFINITION: job-def-youtube-dl
+    JOB_QUEUE: job-que-youtube-dl
 
 functions:
   extract-url:
     handler: handler.extract
   submit-batch-jobs:
     environment:
-      JOB_DEFINITION: youtube-dl-dl-convert-ul:3
-      JOB_QUEUE: first-run-job-queue
+      JOB_DEFINITION: ${self:provider.environment.JOB_DEFINITION}
+      JOB_QUEUE: ${self:provider.environment.JOB_QUEUE}
     handler: handler.submit
   check-job-status:
     handler: handler.check
@@ -118,7 +123,7 @@ stepFunctions:
 resources:
   Resources:
     JobsDynamoDbTable:
-      Type: 'AWS::DynamoDB::Table'
+      Type: AWS::DynamoDB::Table
       DeletionPolicy: Delete
       Properties:
         AttributeDefinitions:
@@ -135,3 +140,51 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.DYNAMODB_TABLE}
+
+    BatchJobRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action: "sts:AssumeRole"
+              Principal:
+                Service: ecs-tasks.amazonaws.com
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+
+    JobDefinition:
+      Type: AWS::Batch::JobDefinition
+      Properties:
+        Type: container
+        JobDefinitionName: job-def-youtube-dl
+        Parameters:
+          url: "https://www.youtube.com"
+        ContainerProperties: 
+          Image: komushi/youtube-dl:dl-convert-ul
+          Vcpus: 4
+          Memory: 512
+          Command: 
+            - "Ref::url"
+          JobRoleArn: 
+            Fn::GetAtt: 
+              - BatchJobRole
+              - Arn
+          Environment:
+            - Name: YOUTUBE_MAX_HEIGHT
+              Value: ${self:provider.environment.YOUTUBE_MAX_HEIGHT}
+            - Name: YOUTUBE_DESTINATION_BUCKET
+              Value: ${self:provider.environment.YOUTUBE_DESTINATION_BUCKET}
+        RetryStrategy: 
+          Attempts: 1
+
+    JobQueue:
+      Type: AWS::Batch::JobQueue
+      Properties:
+        ComputeEnvironmentOrder:
+          - Order: 1
+            ComputeEnvironment: ${self:provider.environment.COMPUTE_ENVIRONMENT}
+        State: ENABLED
+        Priority: 1
+        JobQueueName: job-que-youtube-dl

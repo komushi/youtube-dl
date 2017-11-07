@@ -23,6 +23,11 @@ def submit(job_id):
     dynamo_client = get_dynamo_client()
     batch_client = get_batch_client()
 
+    # jd_response = batch_client.describe_job_definitions(
+    #     jobDefinitionName=os.environ[job_definition]
+    # )
+    # print("Received describe_job_definitions: " + json.dumps(jd_response, indent=2))
+
     res = dynamo_client.query(
         TableName=os.environ[dynamo_table],
         ProjectionExpression='video_id, video_url, video_title',
