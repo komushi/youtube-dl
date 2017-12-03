@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
 
-import boto3
+
 import os
 import sys
 import uuid
 
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'vendored'))
-
+here = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(here, "./vendored"))
+import boto3
 from youtube_dl import YoutubeDL
 
 class Logger(object):
@@ -28,11 +29,12 @@ def processing_hook(d):
         
 def extract(url):
 
+    print("my11 boto3.__version__", boto3.__version__)
+
     ydl_opts = {
         'logger': Logger(),
         'progress_hooks': [processing_hook],
     }
-
 
     ydl = YoutubeDL(ydl_opts)
     info = ydl.extract_info(url, download=False)
@@ -40,19 +42,27 @@ def extract(url):
     client = get_dynamo_client()
     job_id = str(uuid.uuid4())
 
-
     playlist_id = info['id']
     playlist_title = info['title']
 
+    print('job_id:', job_id)
+    # print('info:', info)
+    print('playlist count:', len(info['entries']))
 
     for entry in info['entries']:
         video_title = entry['title']
         video_id = entry['id']
         video_url = entry['webpage_url']
+        video_index = int(entry['playlist_index']) - 1
+        print('video_title:', video_title)
+        print('video_id:', video_id)
+        print('video_index:', video_index)
+        
         client.put_item(
-            TableName='youtube_jobs',
+            TableName='youtube_array_jobs',
             Item={
                 'job_id': {'S': job_id},
+                'video_index': {'N': str(video_index)},
                 'video_id': {'S': video_id},
                 'video_title': {'S': video_title},
                 'video_url': {'S': video_url},
@@ -61,9 +71,7 @@ def extract(url):
             }
         )
 
-    return job_id
-
-
+    return {'job_id': job_id, 'size': len(info['entries'])}
 
 def get_dynamo_client():
     try:
@@ -81,5 +89,5 @@ def get_dynamo_client():
 aws_access_key_id = 'AWS_ACCESS_KEY_ID'
 aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY'
 
-# print(sys.argv)
-# run(sys.argv[1])
+
+# extract(sys.argv[1])

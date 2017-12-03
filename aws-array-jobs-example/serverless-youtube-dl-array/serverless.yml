@@ -1,0 +1,212 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: serverless-youtube-dl-array
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+package:
+  exclude:
+    - node_modules/**
+    # - vendored/**
+    - __pycache__/**
+    - .gitignore
+    - requirements.txt
+  # include:
+  #   - vendored/youtube_dl*/**
+
+plugins:
+  - serverless-step-functions
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: python3.6
+  memorySize: 512
+  timeout: 300
+  stage: dev
+  region: ap-northeast-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:provider.environment.DYNAMODB_TABLE}"
+    - Effect: "Allow"
+      Action:
+        - batch:*
+        - cloudwatch:GetMetricStatistics
+        - ec2:DescribeSubnets
+        - ec2:DescribeSecurityGroups
+        - ec2:DescribeKeyPairs
+        - ecs:DescribeClusters
+        - ecs:Describe*
+        - ecs:List*
+        - logs:Describe*
+        - logs:Get*
+        - logs:TestMetricFilter
+        - logs:FilterLogEvents
+        - iam:ListInstanceProfiles
+        - iam:ListRoles
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - iam:PassRole
+      Resource:
+        - "arn:aws:iam::*:role/AWSBatchServiceRole"
+        - "arn:aws:iam::*:role/ecsInstanceRole"
+        - "arn:aws:iam::*:role/iaws-ec2-spot-fleet-role"
+        - "arn:aws:iam::*:role/aws-ec2-spot-fleet-role"
+        - "arn:aws:iam::*:role/AWSBatchJobRole*"
+  environment:
+    DYNAMODB_TABLE: youtube_array_jobs
+    # WAIT_X_SECONDS: 10
+    # YOUTUBE_MAX_HEIGHT: 500
+    YOUTUBE_DESTINATION_BUCKET: youtube-dl
+    COMPUTE_ENVIRONMENT: compute-env-youtube-dl
+    JOB_DEFINITION: job-def-youtube-dl-array
+    JOB_QUEUE: job-que-youtube-dl-array
+
+
+functions:
+  extract-url:
+    handler: handler.extract
+  submit-array-jobs:
+    environment:
+      JOB_DEFINITION: ${self:provider.environment.JOB_DEFINITION}
+      JOB_QUEUE: ${self:provider.environment.JOB_QUEUE}
+    handler: handler.submit
+
+
+stepFunctions:
+  stateMachines:
+    YoutubeDownloadArray:
+      events:
+        - http:
+            path: youtube-dl-array
+            method: post
+      definition:
+        Comment: "An example to use AWS Step Functions and AWS Batch to parallely download/convert/upload videos from youtube playlist."
+        StartAt: ExtractUrl
+        States:
+          ExtractUrl:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-extract-url"
+            Next: ArrayJobs
+          ArrayJobs:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-submit-array-jobs"
+            Next: Success
+            OutputPath: $
+          # WaitXSeconds:
+          #   Type: Wait
+          #   Seconds: ${self:provider.environment.WAIT_X_SECONDS}
+          #   OutputPath: $
+          #   Next: CheckJobStatus
+          # CheckJobStatus:
+          #   Type: Task
+          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-job-status"
+          #   OutputPath: $
+          #   Next: AllJobsComplete
+          # AllJobsComplete:
+          #   Type: Choice
+          #   Choices:
+          #     - Variable: $.incomplete_jobs
+          #       NumericEquals: 0
+          #       Next: Success
+          #     - Variable: $.incomplete_jobs
+          #       NumericGreaterThan: 0
+          #       Next: WaitXSeconds
+          #       OutputPath: $
+          Success:
+            Type: Succeed
+
+resources:
+  Resources:
+    JobsDynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: job_id
+            AttributeType: S
+          - AttributeName: video_index
+            AttributeType: N
+        KeySchema:
+          - AttributeName: job_id
+            KeyType: HASH
+          - AttributeName: video_index
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+
+    BatchJobRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action: "sts:AssumeRole"
+              Principal:
+                Service: ecs-tasks.amazonaws.com
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+          - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+
+    JobDefinition:
+      Type: AWS::Batch::JobDefinition
+      Properties:
+        Type: container
+        JobDefinitionName: job-def-youtube-dl-array
+        Parameters:
+          job_id: "dummy_job_id"
+        ContainerProperties: 
+          Image: komushi/youtube-dl:dl-convert-ul-array
+          Vcpus: 4
+          Memory: 512
+          Command: 
+            - "Ref::job_id"
+          JobRoleArn: 
+            Fn::GetAtt: 
+              - BatchJobRole
+              - Arn
+          Environment:
+            - Name: YOUTUBE_MAX_HEIGHT
+              Value: ${self:provider.environment.YOUTUBE_MAX_HEIGHT}
+            - Name: YOUTUBE_DESTINATION_BUCKET
+              Value: ${self:provider.environment.YOUTUBE_DESTINATION_BUCKET}
+            - Name: DYNAMODB_TABLE
+              Value: ${self:provider.environment.DYNAMODB_TABLE}
+            - Name: REGION_NAME
+              Value: "#{AWS::Region}"
+        RetryStrategy: 
+          Attempts: 1
+
+    JobQueue:
+      Type: AWS::Batch::JobQueue
+      Properties:
+        ComputeEnvironmentOrder:
+          - Order: 1
+            ComputeEnvironment: ${self:provider.environment.COMPUTE_ENVIRONMENT}
+        State: ENABLED
+        Priority: 1
+        JobQueueName: job-que-youtube-dl-array

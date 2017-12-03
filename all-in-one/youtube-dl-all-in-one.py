@@ -67,8 +67,8 @@ def get_s3_client():
 		session = boto3.Session()
 		
 		if session.get_credentials() is None:
-			session = boto3.Session(aws_access_key_id=os.environ[aws_access_key],
-                  					aws_secret_access_key=os.environ[aws_secret_key])
+			session = boto3.Session(aws_access_key_id=os.environ[aws_access_key_id],
+                  					aws_secret_access_key=os.environ[aws_secret_access_key])
 			
 		return session.client('s3')
 	except:
@@ -80,8 +80,8 @@ print(os.environ)
 
 bucket_key = 'YOUTUBE_DESTINATION_BUCKET'
 height_key = 'YOUTUBE_MAX_HEIGHT'
-aws_access_key = 'AWS_ACCESS_KEY_ID'
-aws_secret_key = 'AWS_SECRET_ACCESS_KEY'
+aws_access_key_id = 'AWS_ACCESS_KEY_ID'
+aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY'
 
 print(sys.argv)
 run(sys.argv[1])

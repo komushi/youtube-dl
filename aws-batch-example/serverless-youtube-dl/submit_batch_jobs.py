@@ -98,8 +98,8 @@ def get_dynamo_client():
         session = boto3.Session()
         
         if session.get_credentials() is None:
-            session = boto3.Session(aws_access_key_id=os.environ[aws_access_key],
-                                    aws_secret_access_key=os.environ[aws_secret_key])
+            session = boto3.Session(aws_access_key_id=os.environ[aws_access_key_id],
+                                    aws_secret_access_key=os.environ[aws_secret_access_key])
             
         return session.client('dynamodb')
     except:
@@ -111,16 +111,16 @@ def get_batch_client():
         session = boto3.Session()
         
         if session.get_credentials() is None:
-            session = boto3.Session(aws_access_key_id=os.environ[aws_access_key],
-                                    aws_secret_access_key=os.environ[aws_secret_key])
+            session = boto3.Session(aws_access_key_id=os.environ[aws_access_key_id],
+                                    aws_secret_access_key=os.environ[aws_secret_access_key])
             
         return session.client('batch')
     except:
         print("Unexpected error:", sys.exc_info()[0])
         raise
 
-aws_access_key = 'AWS_ACCESS_KEY_ID'
-aws_secret_key = 'AWS_SECRET_ACCESS_KEY'
+aws_access_key_id = 'AWS_ACCESS_KEY_ID'
+aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY'
 dynamo_table = 'DYNAMODB_TABLE'
 job_definition = 'JOB_DEFINITION'
 job_queue = 'JOB_QUEUE'
