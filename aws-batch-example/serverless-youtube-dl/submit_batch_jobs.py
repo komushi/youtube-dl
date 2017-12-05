@@ -67,7 +67,7 @@ def submit(job_id):
 
 
         dynamo_client.update_item(
-            TableName='youtube_jobs',
+            TableName=os.environ[dynamo_table],
             Key={
                 'job_id': {
                     'S': job_id

@@ -55,7 +55,7 @@ def check(job_id):
             incomplete_jobs += 1
 
         dynamo_client.update_item(
-            TableName='youtube_jobs',
+            TableName=os.environ[dynamo_table],
             Key={
                 'job_id': {
                     'S': job_id

@@ -47,20 +47,34 @@ def submit(args):
 
     # print("response", json.dumps(response, indent=2))
     batch_job_id = response['jobId']
-    print("*************")
-    print("batch_job_id", batch_job_id)
+    batch_job_status = 'SUBMITTED'
 
-    test = batch_job_id + ":0"
-    print("batch_job_id_array", test)
+    for video_index in range(size):
 
-    describe_jobs_response = batch_client.describe_jobs(jobs=[test])
-    print("*************")
-    print("describe_jobs_response: " + json.dumps(describe_jobs_response, indent=2))
-
-    test2 = "437915c3-05f5-4109-a898-216ea223e9f7:0"
-    describe_jobs_response2 = batch_client.describe_jobs(jobs=[test2])
-    print("*************")
-    print("describe_jobs_response2: " + json.dumps(describe_jobs_response2, indent=2))
+        dynamo_client.update_item(
+            TableName=os.environ[dynamo_table],
+            Key={
+                'job_id': {
+                    'S': job_id
+                },
+                 'video_index': {
+                    'N': str(video_index)
+                }
+            },
+            UpdateExpression='SET #BAT = :bat, #BSTS = :bsts',
+            ExpressionAttributeNames={
+                '#BAT': 'batch_job_id',
+                '#BSTS': 'batch_job_status'
+            },
+            ExpressionAttributeValues={
+                ':bat': {
+                    'S': batch_job_id
+                },
+                ':bsts': {
+                    'S': batch_job_status
+                }
+            }
+        )
 
 
     return job_id

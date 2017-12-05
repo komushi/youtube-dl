@@ -59,7 +59,7 @@ def extract(url):
         print('video_index:', video_index)
         
         client.put_item(
-            TableName='youtube_array_jobs',
+            TableName=os.environ[dynamo_table],
             Item={
                 'job_id': {'S': job_id},
                 'video_index': {'N': str(video_index)},
@@ -88,6 +88,6 @@ def get_dynamo_client():
 
 aws_access_key_id = 'AWS_ACCESS_KEY_ID'
 aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY'
-
+dynamo_table = 'DYNAMODB_TABLE'
 
 # extract(sys.argv[1])

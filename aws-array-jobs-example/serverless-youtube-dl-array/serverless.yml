@@ -76,7 +76,7 @@ provider:
         - "arn:aws:iam::*:role/AWSBatchJobRole*"
   environment:
     DYNAMODB_TABLE: youtube_array_jobs
-    # WAIT_X_SECONDS: 10
+    WAIT_X_SECONDS: 10
     # YOUTUBE_MAX_HEIGHT: 500
     YOUTUBE_DESTINATION_BUCKET: youtube-dl
     COMPUTE_ENVIRONMENT: compute-env-youtube-dl
@@ -92,7 +92,8 @@ functions:
       JOB_DEFINITION: ${self:provider.environment.JOB_DEFINITION}
       JOB_QUEUE: ${self:provider.environment.JOB_QUEUE}
     handler: handler.submit
-
+  check-job-status:
+    handler: handler.check
 
 stepFunctions:
   stateMachines:
@@ -112,28 +113,28 @@ stepFunctions:
           ArrayJobs:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-submit-array-jobs"
-            Next: Success
+            Next: WaitXSeconds
             OutputPath: $
-          # WaitXSeconds:
-          #   Type: Wait
-          #   Seconds: ${self:provider.environment.WAIT_X_SECONDS}
-          #   OutputPath: $
-          #   Next: CheckJobStatus
-          # CheckJobStatus:
-          #   Type: Task
-          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-job-status"
-          #   OutputPath: $
-          #   Next: AllJobsComplete
-          # AllJobsComplete:
-          #   Type: Choice
-          #   Choices:
-          #     - Variable: $.incomplete_jobs
-          #       NumericEquals: 0
-          #       Next: Success
-          #     - Variable: $.incomplete_jobs
-          #       NumericGreaterThan: 0
-          #       Next: WaitXSeconds
-          #       OutputPath: $
+          WaitXSeconds:
+            Type: Wait
+            Seconds: ${self:provider.environment.WAIT_X_SECONDS}
+            OutputPath: $
+            Next: CheckJobStatus
+          CheckJobStatus:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-job-status"
+            OutputPath: $
+            Next: AllJobsComplete
+          AllJobsComplete:
+            Type: Choice
+            Choices:
+              - Variable: $.incomplete_jobs
+                NumericEquals: 0
+                Next: Success
+              - Variable: $.incomplete_jobs
+                NumericGreaterThan: 0
+                Next: WaitXSeconds
+                OutputPath: $
           Success:
             Type: Succeed
 

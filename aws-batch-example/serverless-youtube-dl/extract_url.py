@@ -50,7 +50,7 @@ def extract(url):
         video_id = entry['id']
         video_url = entry['webpage_url']
         client.put_item(
-            TableName='youtube_jobs',
+            TableName=os.environ[dynamo_table],
             Item={
                 'job_id': {'S': job_id},
                 'video_id': {'S': video_id},
@@ -80,6 +80,7 @@ def get_dynamo_client():
 
 aws_access_key_id = 'AWS_ACCESS_KEY_ID'
 aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY'
+dynamo_table = 'DYNAMODB_TABLE'
 
 # print(sys.argv)
 # run(sys.argv[1])
