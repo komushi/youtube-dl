@@ -14,12 +14,12 @@ class Logger(object):
 		print(msg)
 
 
-def run(url):
+def run(url, job_id):
 	
 	if height_key in os.environ:
-		exec_cmd = 'mv {} tmp_mp4; ffmpeg -f mp4 -i tmp_mp4 -vf scale=800:' + os.environ[height_key] + ' {}; rm tmp_mp4; python s3-ul.py {}'
+		exec_cmd = 'mv {} tmp_mp4; ffmpeg -f mp4 -i tmp_mp4 -vf scale=800:' + os.environ[height_key] + ' {}; rm tmp_mp4; python s3-ul.py {} ' + job_id
 	else:
-		exec_cmd = 'python s3_ul_array.py {}'
+		exec_cmd = 'python s3_ul_array.py {} ' + job_id
 
 	ydl_opts = {
 		'outtmpl': '%(title)s-%(id)s.%(ext)s',

@@ -3,7 +3,7 @@ import boto3
 import os
 import sys
 
-def upload(filename):
+def upload(filename, job_id):
 
 	client = get_s3_client()
 	filepath = "./{0}".format(filename)
@@ -42,4 +42,4 @@ aws_access_key_id = 'AWS_ACCESS_KEY_ID'
 aws_secret_access_key = 'AWS_SECRET_ACCESS_KEY'
 
 print(sys.argv)
-upload(sys.argv[1])
+upload(sys.argv[1], sys.argv[2])

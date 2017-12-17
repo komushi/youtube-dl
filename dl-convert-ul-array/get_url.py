@@ -26,7 +26,7 @@ def get_url(job_id):
 
 		video_url = i['video_url']['S']
 		print("video_url: " + video_url)
-		youtube_dl_array.run(video_url)
+		youtube_dl_array.run(video_url, job_id)
 
 
 def get_dynamo_client():
