@@ -25,7 +25,7 @@ $ pip install -t vendored/ -r requirements.txt
 * Modify serverless.yml at provider.environment.YOUTUBE_DESTINATION_BUCKET with the created s3 bucket name
 
 ## Prepare the batch compute environment
-* [Create a batch compute environment](https:/console.aws.amazon.com/batch/home#/compute-environments)
+* [Create a batch compute environment](https://console.aws.amazon.com/batch/home#/compute-environments)
 * Modify serverless.yml at provider.environment.COMPUTE_ENVIRONMENT with the created batch compute environment name
 
 ## Deploy
