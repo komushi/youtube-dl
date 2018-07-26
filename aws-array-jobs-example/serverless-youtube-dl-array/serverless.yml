@@ -76,7 +76,7 @@ provider:
         - "arn:aws:iam::*:role/AWSBatchJobRole*"
   environment:
     DYNAMODB_TABLE: youtube_array_jobs
-    WAIT_X_SECONDS: 10
+    # WAIT_X_SECONDS: 10
     # YOUTUBE_MAX_HEIGHT: 500
     YOUTUBE_DESTINATION_BUCKET: youtube-dl
     COMPUTE_ENVIRONMENT: compute-env-youtube-dl
@@ -102,6 +102,7 @@ stepFunctions:
         - http:
             path: youtube-dl-array
             method: post
+      name: youtube-dl-array
       definition:
         Comment: "An example to use AWS Step Functions and AWS Batch to parallely download/convert/upload videos from youtube playlist."
         StartAt: ExtractUrl
@@ -114,16 +115,17 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-submit-array-jobs"
             Next: WaitXSeconds
-            OutputPath: $
+            # OutputPath: $
           WaitXSeconds:
             Type: Wait
-            Seconds: ${self:provider.environment.WAIT_X_SECONDS}
-            OutputPath: $
+            # Seconds: ${self:provider.environment.WAIT_X_SECONDS}
+            Seconds: 10
+            # OutputPath: $
             Next: CheckJobStatus
           CheckJobStatus:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-job-status"
-            OutputPath: $
+            # OutputPath: $
             Next: AllJobsComplete
           AllJobsComplete:
             Type: Choice
@@ -134,7 +136,7 @@ stepFunctions:
               - Variable: $.incomplete_jobs
                 NumericGreaterThan: 0
                 Next: WaitXSeconds
-                OutputPath: $
+                # OutputPath: $
           Success:
             Type: Succeed
 
@@ -192,7 +194,8 @@ resources:
               - Arn
           Environment:
             - Name: YOUTUBE_MAX_HEIGHT
-              Value: ${self:provider.environment.YOUTUBE_MAX_HEIGHT}
+              # Value: ${self:provider.environment.YOUTUBE_MAX_HEIGHT}
+              Value: 500
             - Name: YOUTUBE_DESTINATION_BUCKET
               Value: ${self:provider.environment.YOUTUBE_DESTINATION_BUCKET}
             - Name: DYNAMODB_TABLE
