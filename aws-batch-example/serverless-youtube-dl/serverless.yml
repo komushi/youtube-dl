@@ -81,6 +81,7 @@ functions:
 stepFunctions:
   stateMachines:
     YoutubeDownload:
+      name: youtube-dl
       events:
         - http:
             path: youtube-dl
@@ -97,17 +98,17 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-submit-batch-jobs"
             Next: WaitXSeconds
-            OutputPath: $
+            # OutputPath: $
           WaitXSeconds:
             Type: Wait
             # Seconds: ${self:provider.environment.WAIT_X_SECONDS}
             Seconds: 10
-            OutputPath: $
+            # OutputPath: $
             Next: CheckJobStatus
           CheckJobStatus:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-check-job-status"
-            OutputPath: $
+            # OutputPath: $
             Next: AllJobsComplete
           AllJobsComplete:
             Type: Choice
@@ -118,7 +119,7 @@ stepFunctions:
               - Variable: $.incomplete_jobs
                 NumericGreaterThan: 0
                 Next: WaitXSeconds
-                OutputPath: $
+                # OutputPath: $
           Success:
             Type: Succeed
 resources:

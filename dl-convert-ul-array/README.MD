@@ -29,13 +29,13 @@ $ cd dl-convert-ul
 ### 2-2-2. Build docker image
 
 ```
-$ docker build -f ./Dockerfile -t komushi/youtube-dl:dl-convert-ul .
+$ docker build -f ./Dockerfile -t komushi/youtube-dl:dl-convert-ul-array .
 ```
 
 ### 2-2-3. Run
 
 ```
-$ docker run -i -t -e AWS_ACCESS_KEY_ID=<aws-key> -e AWS_SECRET_ACCESS_KEY=<aws-secret> -e YOUTUBE_DESTINATION_BUCKET=<your-bucket> -e YOUTUBE_MAX_HEIGHT=<max-height> komushi/youtube-dl:dl-convert-ul <youtube-url>
+$ docker run -i -t -e AWS_ACCESS_KEY_ID=<aws-key> -e AWS_SECRET_ACCESS_KEY=<aws-secret> -e YOUTUBE_DESTINATION_BUCKET=<your-bucket> -e YOUTUBE_MAX_HEIGHT=<max-height> komushi/youtube-dl:dl-convert-ul-array <youtube-url>
 ```
 
 ### 2-2-4. Optionally push to a docker image repositiory

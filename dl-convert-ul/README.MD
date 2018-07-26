@@ -29,7 +29,7 @@ $ cd dl-convert-ul
 ### 2-2-2. Build docker image
 
 ```
-$ docker build -f ./Dockerfile -t komushi/youtube-dl:dl-convert-ul-array .
+$ docker build -f ./Dockerfile -t komushi/youtube-dl:dl-convert-ul .
 ```
 
 ### 2-2-3. Run
