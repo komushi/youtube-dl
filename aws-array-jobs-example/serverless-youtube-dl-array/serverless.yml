@@ -76,8 +76,8 @@ provider:
         - "arn:aws:iam::*:role/AWSBatchJobRole*"
   environment:
     DYNAMODB_TABLE: youtube_array_jobs
-    # WAIT_X_SECONDS: 10
-    # YOUTUBE_MAX_HEIGHT: 500
+    WAIT_X_SECONDS: 10
+    YOUTUBE_MAX_HEIGHT: 500
     YOUTUBE_DESTINATION_BUCKET: youtube-dl
     COMPUTE_ENVIRONMENT: compute-env-youtube-dl
     JOB_DEFINITION: job-def-youtube-dl-array
@@ -118,8 +118,8 @@ stepFunctions:
             # OutputPath: $
           WaitXSeconds:
             Type: Wait
-            # Seconds: ${self:provider.environment.WAIT_X_SECONDS}
-            Seconds: 10
+            Seconds: ${self:provider.environment.WAIT_X_SECONDS}
+            # Seconds: 10
             # OutputPath: $
             Next: CheckJobStatus
           CheckJobStatus:
@@ -194,8 +194,8 @@ resources:
               - Arn
           Environment:
             - Name: YOUTUBE_MAX_HEIGHT
-              # Value: ${self:provider.environment.YOUTUBE_MAX_HEIGHT}
-              Value: 500
+              Value: ${self:provider.environment.YOUTUBE_MAX_HEIGHT}
+              # Value: 500
             - Name: YOUTUBE_DESTINATION_BUCKET
               Value: ${self:provider.environment.YOUTUBE_DESTINATION_BUCKET}
             - Name: DYNAMODB_TABLE
