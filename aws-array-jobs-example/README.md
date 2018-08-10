@@ -11,8 +11,8 @@ $ cd aws-array-jobs-example/serverless-youtube-dl-array
 ## Install serverless framework
 ```
 $ npm install serverless -g
-$ npm install serverless-step-functions
-$ npm install serverless-pseudo-parameters
+$ npm install --save-dev serverless-step-functions
+$ npm install --save-dev serverless-pseudo-parameters
 ```
 
 ## Install libraries
